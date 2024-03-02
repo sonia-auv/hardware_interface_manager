@@ -14,6 +14,13 @@ find_package(rclcpp REQUIRED)
 find_package(sonia_common_cpp REQUIRED)
 find_package(sonia_common_ros2 REQUIRED)
 
+add_executable(${PROJECT_NAME} src/RS485Interface.cpp)
+ament_target_dependencies(${PROJECT_NAME} rclcpp sonia_common_cpp)
+
+install(TARGETS
+  ${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
