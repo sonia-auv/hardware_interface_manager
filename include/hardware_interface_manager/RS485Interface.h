@@ -10,7 +10,7 @@ namespace sonia_hw_interface {
     class RS485Interface {
     public:
         RS485Interface();
-        ~RS485Interface();
+        ~RS485Interface() {};
 
         bool OpenPort();
 

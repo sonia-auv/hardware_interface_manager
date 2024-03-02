@@ -1,4 +1,4 @@
-#include "RS485Interface.h"
+#include "hardware_interface_manager/RS485Interface.h"
 
 namespace sonia_hw_interface {
 
