@@ -98,7 +98,9 @@ unsigned long SharedQueue<T>::size()
 {
     std::unique_lock<std::mutex> mlock(mutex_);
     unsigned long size = queue_.size();
-    mlock.unlock();
+    mlock.unlock(
+        
+    );
     cond_.notify_one();
     return size;
 }

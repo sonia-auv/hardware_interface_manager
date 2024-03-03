@@ -25,8 +25,11 @@ install(
   DESTINATION include
 )
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp sonia_common_cpp)
+install(TARGETS
+${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME})
 
+ament_target_dependencies(${PROJECT_NAME} rclcpp sonia_common_cpp)
 
 
 if(BUILD_TESTING)
