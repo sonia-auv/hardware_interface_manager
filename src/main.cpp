@@ -2,30 +2,20 @@
 #include <stdlib.h>
 #include <iostream>
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
-    if (argc < 2) 
-    {
-        return EXIT_FAILURE;
-    }   
-    sonia_hw_interface::RS485Interface interface;
-    if (!interface.OpenPort())
-    {
-        std::cout << "Could not open port..." << std::endl;
-        return EXIT_FAILURE;
-    }
+    rclcpp::init(argc, argv);
+    auto interface = std::make_shared<sonia_hw_interface::RS485Interface>();
+    // if (!interface->OpenPort())
+    // {
+    //     std::cout << "Could not open port..." << std::endl;
+    //     return EXIT_FAILURE;
+    // }
 
-    switch (*argv[1])
-    {
-    case 'd':
-        //Dropper
-        std::cout << "Dropper" << std::endl;
-        break;
-    default:
-        std::cout << "Command not registered" << std::endl;
-        break;
-    }
+    rclcpp::spin(interface);
+
+    rclcpp::shutdown();
 
 
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }

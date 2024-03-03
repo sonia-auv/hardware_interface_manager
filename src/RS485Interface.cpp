@@ -1,16 +1,16 @@
 #include "hardware_interface_manager/RS485Interface.h"
-
+using std::placeholders::_1;
 
 namespace sonia_hw_interface {
 
     RS485Interface::RS485Interface()
-    : Node("rs485_interface"), _serial_connection("/dev/RS485", B115200, false), _thread_control(true)
+    : Node("rs485_interface"), _serial_connection("/dev/RS485", B115200, false), _thread_control(true) 
     {
         _reader = std::thread(std::bind(&RS485Interface::readData, this));
         _writer = std::thread(std::bind(&RS485Interface::writeData, this));
         _parser = std::thread(std::bind(&RS485Interface::parseData, this));
 
-        _subscriber = this->create_subscription<>("/rs485_interface/tx", 10, std::bind(&RS485Interface::processTX, this))
+        _subscriber = this->create_subscription<sonia_common_ros2::msg::SerialMessage>("/rs485_interface/tx", 10, std::bind(&RS485Interface::processTx, this, _1));
     }
     
     //node destructor
@@ -37,6 +37,11 @@ namespace sonia_hw_interface {
     void RS485Interface::Kill()
     {
         _thread_control = false;
+    }
+
+    void RS485Interface::processTx(const sonia_common_ros2::msg::SerialMessage &data) const
+    {
+        std::cout << (int)data.id << std::endl;
     }
 
 // no need.

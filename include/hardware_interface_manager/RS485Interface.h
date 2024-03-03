@@ -6,7 +6,7 @@
 #include <vector>
 #include "rclcpp/rclcpp.hpp"
 #include "sonia_common_cpp/SerialConn.h"
-#include "sonia_common_ros2/msg/SerialMessage.hpp"
+#include "sonia_common_ros2/msg/serial_message.hpp"
 #include "SharedQueue.h"
 
 namespace sonia_hw_interface {
@@ -35,12 +35,12 @@ namespace sonia_hw_interface {
             void writeData();
             void parseData();
             // TODO add type
-            // void processTx(data);
+            void processTx(const sonia_common_ros2::msg::SerialMessage &data) const;
 
             // double sleepTime;
             sonia_cpp::SerialConn _serial_connection;
 
-            rclcpp::Subscription<sonia_common_ros2::msg::SerialMessage> _subscriber;
+            rclcpp::Subscription<sonia_common_ros2::msg::SerialMessage>::SharedPtr _subscriber;
 
             std::thread _reader;
             std::thread _parser;

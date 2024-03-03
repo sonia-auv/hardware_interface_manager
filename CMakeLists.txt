@@ -29,7 +29,7 @@ install(TARGETS
 ${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp sonia_common_cpp)
+ament_target_dependencies(${PROJECT_NAME} rclcpp sonia_common_cpp sonia_common_ros2)
 
 
 if(BUILD_TESTING)
