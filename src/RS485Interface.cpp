@@ -1,19 +1,22 @@
 #include "hardware_interface_manager/RS485Interface.h"
+#include <chrono>
 using std::placeholders::_1;
 using std::placeholders::_2;
+using namespace std::chrono_literals;
 
 namespace sonia_hw_interface
 {
 
     RS485Interface::RS485Interface()
-        : Node("rs485_interface"), _serial_connection("/dev/RS485", B115200, false), _thread_control(true)
+        : Node("rs485_interface"), _rs485_connection("/dev/RS485", B115200, false), _thread_control(true)
     {
         _reader = std::thread(std::bind(&RS485Interface::readData, this));
         _writer = std::thread(std::bind(&RS485Interface::writeData, this));
         _parser = std::thread(std::bind(&RS485Interface::parseData, this));
-
-        _subscriber = this->create_subscription<sonia_common_ros2::msg::SerialMessage>("/rs485_interface/tx", 10, std::bind(&RS485Interface::processTx, this, _1));
+        _publisher_kill = this->create_publisher<sonia_common_ros2::msg::KillStatus>("/kill/tx", 10);
+        _publisher_mission = this->create_publisher<sonia_common_ros2::msg::MissionStatus>("/mission/tx", 10);
         _dropper_server = this->create_service<sonia_common_ros2::srv::DropperService>("actuate_dropper", std::bind(&RS485Interface::processDropperRequest, this, _1, _2));
+        _kill_mission_timer = this->create_wall_timer(500ms, std::bind(&RS485Interface::pollKillMission, this));
     }
 
     // node destructor
@@ -23,7 +26,18 @@ namespace sonia_hw_interface
 
     bool RS485Interface::OpenPort()
     {
-        return _serial_connection.OpenPort();
+        bool res = _rs485_connection.OpenPort();
+        if (res){
+            _rs485_connection.Flush();
+        }
+        return res;
+    }
+
+    void RS485Interface::pollKillMission()
+    {
+        _rs485_connection.Transmit(_GET_KILL_STATUS_MSG, 8);
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        _rs485_connection.Transmit(_GET_MISSION_STATUS_MSG, 8);
     }
 
     uint16_t RS485Interface::checkSum(uint8_t slave, uint8_t cmd, uint8_t nbByte, std::vector<uint8_t> data)
@@ -53,18 +67,34 @@ namespace sonia_hw_interface
         uint8_t checksum_1 = checksum >> 8;
         uint8_t checksum_2 = checksum & 0xFF;
         const uint8_t dropper[8] = {_START_BYTE, _SlaveId::SLAVE_IO, _Cmd::CMD_IO_DROPPER_ACTION, 1, request->side, checksum_1, checksum_2, _END_BYTE};
-        transmit_status = _serial_connection.Transmit(dropper, 8);
+        transmit_status = _rs485_connection.Transmit(dropper, 8);
         response->result = transmit_status;
+    }
+
+    void RS485Interface::processKill(bool status)
+    {
+        sonia_common_ros2::msg::KillStatus state;
+        state.status = status;
+        _publisher_kill->publish(state);
+    }
+
+    void RS485Interface::processMission(bool status)
+    {
+        sonia_common_ros2::msg::MissionStatus state;
+        state.status = status;
+        _publisher_mission->publish(state);
     }
 
     // no need.
     void RS485Interface::readData()
     {
-        uint8_t data[DATA_READ_CHUNCK];
+        uint8_t data[1024];
         while (_thread_control)
         {
-            ssize_t str_len = _serial_connection.ReadPackets(DATA_READ_CHUNCK, data);
-
+            // This sleep is needed... I DON"T KNOW WHY...
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
+            ssize_t str_len = _rs485_connection.ReadPackets(1024, data);
+            
             if (str_len != -1)
             {
                 for (ssize_t i = 0; i < str_len; i++)
@@ -103,7 +133,7 @@ namespace sonia_hw_interface
                 data[data_size - 2] = (uint8_t)(checksum & 0xFF);
                 data[data_size - 1] = (uint8_t)(0x0D);
 
-                _serial_connection.Transmit((const uint8_t *)data, data_size);
+                _rs485_connection.Transmit((const uint8_t *)data, data_size);
                 delete data;
             }
         }
@@ -146,12 +176,39 @@ namespace sonia_hw_interface
                     _parseQueue.pop_front();
 
                     uint16_t calc_checksum = checkSum(msg.slave, msg.cmd, nbByte, msg.data);
+                    // std::cout << (int)msg.slave << std::endl;
+                    // std::cout << (int)msg.cmd << std::endl;
+                    // std::cout << (int)msg.data[0] << std::endl;
 
                     // if the checksum is bad, drop the packet
-                    if (checkResult != calc_checksum)
+                    if (checkResult == calc_checksum)
                     {
                         // publisher.publish(msg);
+                        switch (msg.slave)
+                        {
+                        case _SlaveId::SLAVE_KILLMISSION:
+                            switch (msg.cmd)
+                            {
+                            case _Cmd::CMD_KILL:
+                                // get data value
+                                // publish on kill publisher
+                                processKill(msg.data[0] == 1);
+                                break;
+                            case _Cmd::CMD_MISSION:
+                                // get data value
+                                // publish on mission publisher
+                                processMission(msg.data[0] == 1);
+                                break;
+                            default:
+                                break;
+                            }
+                            break;
+
+                        default:
+                            break;
+                        }
                     }
+                    // packet dropped
                 }
             }
         }

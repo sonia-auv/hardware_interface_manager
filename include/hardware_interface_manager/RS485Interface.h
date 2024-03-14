@@ -7,6 +7,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sonia_common_cpp/SerialConn.h"
 #include "sonia_common_ros2/msg/serial_message.hpp"
+#include "sonia_common_ros2/msg/kill_status.hpp"
+#include "sonia_common_ros2/msg/mission_status.hpp"
 #include "sonia_common_ros2/srv/dropper_service.hpp"
 #include "SharedQueue.h"
 
@@ -46,7 +48,7 @@ namespace sonia_hw_interface {
                 CMD_VOLTAGE = 0,
                 CMD_CURRENT = 1,
                 CMD_TEMPERATURE = 2,
-                CMD_READ_MOTOR = 15,
+                CMD_READ_MOTOR = 15,    
                 CMD_ACT_MOTOR = 16,
                 CMD_PWM = 17,
                 CMD_IO_TEMP= 0,
@@ -62,6 +64,7 @@ namespace sonia_hw_interface {
             void readData();
             void writeData();
             void parseData();
+            void pollKillMission();
             // TODO add type
             
             /**
@@ -69,12 +72,16 @@ namespace sonia_hw_interface {
             */
             void processTx(const sonia_common_ros2::msg::SerialMessage &data) const;
             void processDropperRequest(const std::shared_ptr<sonia_common_ros2::srv::DropperService::Request> request, std::shared_ptr<sonia_common_ros2::srv::DropperService::Response> response);
-            
+            void processKill(bool status);
+            void processMission(bool status);
             // double sleepTime;
-            sonia_common_cpp::SerialConn _serial_connection;
+            sonia_common_cpp::SerialConn _rs485_connection;
 
-            rclcpp::Subscription<sonia_common_ros2::msg::SerialMessage>::SharedPtr _subscriber;
+            //rclcpp::Subscription<sonia_common_ros2::msg::SerialMessage>::SharedPtr _subscriber;
+            rclcpp::Publisher<sonia_common_ros2::msg::KillStatus>::SharedPtr _publisher_kill;
+            rclcpp::Publisher<sonia_common_ros2::msg::MissionStatus>::SharedPtr _publisher_mission;
             rclcpp::Service<sonia_common_ros2::srv::DropperService>::SharedPtr _dropper_server;
+            rclcpp::TimerBase::SharedPtr _kill_mission_timer;
 
             std::thread _reader;
             std::thread _parser;
@@ -85,9 +92,11 @@ namespace sonia_hw_interface {
 
             bool _thread_control;
 
-            static const int DATA_READ_CHUNCK = 8192;
+            static const int DATA_READ_CHUNCK = 1024;
             const u_int8_t _START_BYTE = 0x3A;
             const u_int8_t _END_BYTE = 0x0D;
+            const uint8_t _GET_KILL_STATUS_MSG[8] = {0x3A, 4, 1, 1, 0, 0, 77, 0x0D};
+            const uint8_t _GET_MISSION_STATUS_MSG[8] = {0x3A, 4, 0, 1, 1, 0, 77, 0x0D};
     };
 
 }
