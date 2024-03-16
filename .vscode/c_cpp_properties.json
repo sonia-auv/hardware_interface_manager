@@ -1,0 +1,36 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/nimai/ros2_sonia_ws/install/btcpp_ros2_interfaces/include/**",
+        "/home/nimai/ros2_sonia_ws/install/sonia_behaviortree/include/**",
+        "/home/nimai/ros2_sonia_ws/install/dropper_test/include/**",
+        "/home/nimai/ros2_sonia_ws/install/hardware_interface_manager/include/**",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_ros2/include/**",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_cpp/include/**",
+        "/home/nimai/ros2_sonia_ws/install/behaviortree_ros2/include/**",
+        "/home/nimai/ros2_sonia_ws/install/behaviortree_cpp/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/nimai/ros2_sonia_ws/src/BehaviorTree.CPP/include/**",
+        "/home/nimai/ros2_sonia_ws/src/BehaviorTree.ROS2/behaviortree_ros2/include/**",
+        "/home/nimai/ros2_sonia_ws/src/bt_tutorial/include/**",
+        "/home/nimai/ros2_sonia_ws/src/dropper_test/include/**",
+        "/home/nimai/ros2_sonia_ws/src/hardware_interface_manager/include/**",
+        "/home/nimai/ros2_sonia_ws/src/sonia_BehaviorTree/include/**",
+        "/home/nimai/ros2_sonia_ws/src/sonia_common_ros2/sonia_common_cpp/include/**",
+        "include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

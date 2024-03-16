@@ -67,5 +67,23 @@
         "semaphore": "cpp",
         "span": "cpp",
         "stop_token": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/nimai/ros2_sonia_ws/install/testP-y/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_py/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/rqt_toolbar/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/btcpp_ros2_interfaces/local/lib/python3.10/dist-packages",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_ros2/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/nimai/ros2_sonia_ws/install/testP-y/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_py/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/rqt_toolbar/lib/python3.10/site-packages",
+        "/home/nimai/ros2_sonia_ws/install/btcpp_ros2_interfaces/local/lib/python3.10/dist-packages",
+        "/home/nimai/ros2_sonia_ws/install/sonia_common_ros2/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
 }
