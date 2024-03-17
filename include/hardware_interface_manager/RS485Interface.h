@@ -10,14 +10,16 @@
 #include "sonia_common_ros2/msg/serial_message.hpp"
 #include "sonia_common_ros2/msg/kill_status.hpp"
 #include "sonia_common_ros2/msg/mission_status.hpp"
+#include "sonia_common_ros2/msg/motor_voltages.hpp"
+#include "sonia_common_ros2/msg/battery_voltage.hpp"
 #include "sonia_common_ros2/srv/dropper_service.hpp"
 #include "SharedQueue.h"
 
 namespace sonia_hw_interface
 {
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      */
     struct queueObject
     {
@@ -96,7 +98,7 @@ namespace sonia_hw_interface
         std::tuple<uint8_t, uint8_t> checkSum(uint8_t slave, uint8_t cmd, uint8_t nbByte, std::vector<uint8_t> data);
 
         /**
-         * @brief read data from RS485 connection and pushes into the parse queue. 
+         * @brief read data from RS485 connection and pushes into the parse queue.
          * This function runs in a loop, continuously reading data from the RS485 connection in chunks.
          * The data is then pushed into a parse queue for further processing.
          */
@@ -104,7 +106,7 @@ namespace sonia_hw_interface
 
         /**
          * @brief write data to RS485 bassed on message from _writerQueue.
-         * 
+         *
          */
         void writeData();
 
@@ -114,43 +116,65 @@ namespace sonia_hw_interface
          */
         void parseData();
 
-         /**
-          * @brief Polls the status of kill and mission via RS485 connection.
-          * 
-          * This function sends requests to retrieve the status of kill and mission
-          * via the RS485 connection.
-          */
+        /**
+         * @brief Polls the status of kill and mission via RS485 connection.
+         *
+         * This function sends requests to retrieve the status of kill and mission
+         * via the RS485 connection.
+         */
         void pollKillMission();
 
         /**
          * @brief Processes a dropper service request.
          *
-         * @param request 
-         * @param response 
+         * @param request
+         * @param response
          */
         void processDropperRequest(const std::shared_ptr<sonia_common_ros2::srv::DropperService::Request> request, std::shared_ptr<sonia_common_ros2::srv::DropperService::Response> response);
-        
+
+        void processPowerManagement(uint8_t cmd, std::vector<uint8_t> data);
+
         /**
-         * @brief 
-         * 
-         * @param status 
+         * @brief
+         *
+         * @param status
          */
         void publishKill(bool status);
 
         /**
-         * @brief 
-         * 
-         * @param status 
+         * @brief
+         *
+         * @param status
          */
         void publishMission(bool status);
 
+        void publishMotorVoltages(std::vector<float> data);
 
-        sonia_common_cpp::SerialConn _rs485_connection;
+        void publishBatteryVoltages(float *data);
 
-        rclcpp::Publisher<sonia_common_ros2::msg::KillStatus>::SharedPtr _publisher_kill;
-        rclcpp::Publisher<sonia_common_ros2::msg::MissionStatus>::SharedPtr _publisher_mission;
-        rclcpp::Service<sonia_common_ros2::srv::DropperService>::SharedPtr _dropper_server;
-        rclcpp::TimerBase::SharedPtr _kill_mission_timer;
+        int convertBytesToFloat(const std::vector<uint8_t> &req, std::vector<float> &res);
+
+        union _bytesToFloat
+        {
+            uint8_t bytes[4];
+            float_t value;
+        };
+
+        static const int _DATA_READ_CHUNCK = 1024;
+        const u_int8_t _START_BYTE = 0x3A;
+        const u_int8_t _END_BYTE = 0x0D;
+        const uint8_t _GET_KILL_STATUS_MSG[8] = {0x3A, 4, 1, 1, 0, 0, 77, 0x0D};
+        const uint8_t _GET_MISSION_STATUS_MSG[8] = {0x3A, 4, 0, 1, 1, 0, 77, 0x0D};
+        const uint8_t _EXPECTED_PWR_VOLT_SIZE = 10;
+
+        sonia_common_cpp::SerialConn _rs485Connection;
+
+        rclcpp::Publisher<sonia_common_ros2::msg::KillStatus>::SharedPtr _publisherKill;
+        rclcpp::Publisher<sonia_common_ros2::msg::MissionStatus>::SharedPtr _publisherMission;
+        rclcpp::Publisher<sonia_common_ros2::msg::MotorVoltages>::SharedPtr _publisherMotorVoltages;
+        rclcpp::Publisher<sonia_common_ros2::msg::BatteryVoltage>::SharedPtr _publisherBatteryVoltages;
+        rclcpp::Service<sonia_common_ros2::srv::DropperService>::SharedPtr _dropperServer;
+        rclcpp::TimerBase::SharedPtr _timerKillMission;
 
         std::thread _reader;
         std::thread _parser;
@@ -161,11 +185,6 @@ namespace sonia_hw_interface
 
         bool _thread_control;
 
-        static const int _DATA_READ_CHUNCK = 1024;
-        const u_int8_t _START_BYTE = 0x3A;
-        const u_int8_t _END_BYTE = 0x0D;
-        const uint8_t _GET_KILL_STATUS_MSG[8] = {0x3A, 4, 1, 1, 0, 0, 77, 0x0D};
-        const uint8_t _GET_MISSION_STATUS_MSG[8] = {0x3A, 4, 0, 1, 1, 0, 77, 0x0D};
     };
 
 }
